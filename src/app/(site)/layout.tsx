@@ -2,6 +2,7 @@ import { requirePageUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Header } from "@/components/header";
 import { Leaf } from "lucide-react";
+import { LegalLinks } from "@/components/legal-links";
 export const dynamic = "force-dynamic";
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
   const user = await requirePageUser();
@@ -18,6 +19,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           <Leaf size={18} /> EcoMarket PUCP
         </span>
         <span>Una segunda vida para cada material. Sin dinero de por medio.</span>
+        <LegalLinks />
       </footer>
     </>
   );

@@ -15,13 +15,17 @@ try {
   const email = (await rl.question("Correo del usuario: ")).trim().toLowerCase();
   const user = await db.user.findUnique({ where: { email } });
   if (!user) throw new Error("No existe ese usuario.");
-  process.stdout.write("Nueva contraseña (12 a 72 caracteres, no se mostrará): ");
+  process.stdout.write(
+    "Nueva contraseña (mínimo 12 caracteres, máximo 72 bytes; no se mostrará): ",
+  );
   muted = true;
   const password = await rl.question("");
   muted = false;
   process.stdout.write("\n");
-  if (password.length < 12 || password.length > 72)
-    throw new Error("Longitud de contraseña no válida.");
+  if (password.length < 12 || Buffer.byteLength(password, "utf8") > 72)
+    throw new Error(
+      "Usa al menos 12 caracteres y máximo 72 bytes (tildes y emojis ocupan más de un byte).",
+    );
   process.stdout.write("Repite la contraseña: ");
   muted = true;
   const confirmation = await rl.question("");

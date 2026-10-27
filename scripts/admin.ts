@@ -8,8 +8,15 @@ async function main() {
     console.log("ADMIN_EMAIL y ADMIN_PASSWORD vacíos: no se crea administrador.");
     return;
   }
-  if (!/^[^@\s]+@pucp\.edu\.pe$/.test(email) || password.length < 12 || password.length > 72)
-    throw new Error("Usa un correo @pucp.edu.pe y una contraseña de 12 a 72 caracteres.");
+  if (
+    !/^[^@\s]+@pucp\.edu\.pe$/.test(email) ||
+    email.length > 254 ||
+    password.length < 12 ||
+    Buffer.byteLength(password, "utf8") > 72
+  )
+    throw new Error(
+      "Usa un correo @pucp.edu.pe y una contraseña de al menos 12 caracteres y máximo 72 bytes.",
+    );
   const existing = await db.user.findUnique({ where: { email } });
   if (existing) {
     console.log(

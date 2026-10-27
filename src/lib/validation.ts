@@ -4,12 +4,16 @@ export const emailSchema = z
   .string()
   .trim()
   .toLowerCase()
+  .max(254, "El correo es demasiado largo.")
   .email("Escribe un correo válido.")
   .regex(/^[^@\s]+@pucp\.edu\.pe$/, "Usa tu correo @pucp.edu.pe.");
 export const passwordSchema = z
   .string()
-  .min(8, "La contraseña debe tener al menos 8 caracteres.")
-  .max(72, "Máximo 72 caracteres.");
+  .min(15, "La contraseña debe tener al menos 15 caracteres.")
+  .max(72, "Máximo 72 caracteres.")
+  .refine((password) => new TextEncoder().encode(password).length <= 72, {
+    message: "La contraseña supera 72 bytes. Las tildes y los emojis pueden ocupar más de un byte.",
+  });
 export const profileSchema = z.object({
   name: z.string().trim().min(2).max(70),
   faculty: z.enum(FACULTIES),
@@ -19,6 +23,10 @@ export const profileSchema = z.object({
 export const registerSchema = profileSchema.extend({
   email: emailSchema,
   password: passwordSchema,
+  acceptTerms: z.literal(true, { error: "Debes aceptar los términos de uso." }),
+  consentData: z.literal(true, {
+    error: "Debes autorizar el tratamiento de datos descrito en el aviso de privacidad.",
+  }),
 });
 export const listingSchema = z
   .object({

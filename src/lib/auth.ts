@@ -7,7 +7,7 @@ const COOKIE = "ecomarket_session";
 const hash = (s: string) => createHash("sha256").update(s).digest("hex");
 export async function currentUser() {
   const token = (await cookies()).get(COOKIE)?.value;
-  if (!token) return null;
+  if (!token || !/^[a-f0-9]{64}$/.test(token)) return null;
   const session = await db.session.findUnique({
     where: { tokenHash: hash(token) },
     include: { user: true },
@@ -26,14 +26,20 @@ export async function requirePageUser() {
   return user;
 }
 export async function signIn(userId: string) {
+  const jar = await cookies();
+  const previous = jar.get(COOKIE)?.value;
   const token = randomBytes(32).toString("hex");
   const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-  await db.session.deleteMany({ where: { expiresAt: { lt: new Date() } } });
+  await db.session.deleteMany({
+    where: {
+      OR: [{ expiresAt: { lt: new Date() } }, ...(previous ? [{ tokenHash: hash(previous) }] : [])],
+    },
+  });
   await db.session.create({ data: { tokenHash: hash(token), userId, expiresAt: expires } });
-  (await cookies()).set(COOKIE, token, {
+  jar.set(COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
-    secure: process.env.COOKIE_SECURE === "true",
+    secure: process.env.COOKIE_SECURE === "true" || process.env.APP_URL?.startsWith("https://"),
     path: "/",
     expires,
   });

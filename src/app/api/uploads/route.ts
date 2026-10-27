@@ -34,7 +34,13 @@ export async function POST(request: NextRequest) {
     ensure(count < 60, "Límite de imágenes por hora alcanzado.", 429);
     let bytes: Buffer;
     try {
-      bytes = await sharp(Buffer.from(await file.arrayBuffer()), { limitInputPixels: 40000000 })
+      const source = sharp(Buffer.from(await file.arrayBuffer()), { limitInputPixels: 40000000 });
+      const metadata = await source.metadata();
+      ensure(
+        metadata.format && ["jpeg", "png", "webp"].includes(metadata.format),
+        "El contenido debe ser una imagen JPG, PNG o WebP real.",
+      );
+      bytes = await source
         .rotate()
         .resize(1600, 1600, { fit: "inside", withoutEnlargement: true })
         .webp({ quality: 85 })

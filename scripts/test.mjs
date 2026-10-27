@@ -21,6 +21,7 @@ try {
     "tests/validation.test.ts",
     "tests/trades.test.ts",
     "tests/seed.test.ts",
+    "tests/security.test.ts",
   ]);
 } catch (e) {
   console.error(e.message);

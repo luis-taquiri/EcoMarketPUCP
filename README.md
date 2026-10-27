@@ -7,6 +7,7 @@ Una sola aplicación: Next.js + React + TypeScript + Tailwind/CSS, Prisma, SQLit
 ## Qué funciona
 
 - Registro e ingreso con correo `@pucp.edu.pe` y contraseña, mostrar/ocultar contraseña, perfil editable y cierre de sesión.
+- Registro con aceptación separada de términos y tratamiento de datos; casillas desmarcadas y validación también en el servidor. `/privacidad` y `/terminos` son públicas.
 - Catálogo con búsqueda, facultad, categoría, trueque/donación, orden y paginación de 12 materiales.
 - Publicar, editar, archivar y volver a publicar materiales. Hasta 5 fotos por publicación.
 - Fotos JPG, PNG o WebP de hasta 5 MB: se validan, orientan y convierten a WebP. HEIC se rechaza con un mensaje claro; conviértelo a JPG primero.
@@ -54,11 +55,27 @@ Edita `.env`. Este archivo no se sube a GitHub.
 | `HOST_PORT`      | Puerto local del servidor: `3200`. MarketLite puede seguir en `3000`.                                    |
 | `SEED_DEMO`      | `false` por defecto. `true` carga la demo si aún no existen sus cuentas, conservando los demás usuarios. |
 | `ADMIN_EMAIL`    | Correo `@pucp.edu.pe` para crear una cuenta administradora inicial, opcional.                            |
-| `ADMIN_PASSWORD` | Contraseña propia de 12 a 72 caracteres para ese administrador.                                          |
+| `ADMIN_PASSWORD` | Contraseña propia de al menos 12 caracteres y máximo 72 bytes UTF-8 para ese administrador.              |
 | `DATABASE_URL`   | Solo desarrollo local. Compose establece `file:/app/data/prod.db` dentro del contenedor.                 |
 | `UPLOAD_DIR`     | Solo desarrollo local. Compose establece `/app/uploads`.                                                 |
 
 `APP_URL` también se usa para rechazar solicitudes de escritura originadas desde otra web. Si cambias el puerto, ajusta `APP_URL`. No abras el puerto del contenedor a internet: Compose lo publica únicamente en `127.0.0.1`.
+
+Compose activa `TRUST_PROXY=true` porque el despliegue usa un único Apache local. El limitador toma la última dirección de `X-Forwarded-For`, añadida por Apache, no la primera aportada por el visitante. No expongas directamente el puerto 3200 ni uses esa opción detrás de una cadena de proxies sin revisar su configuración. Sin proxy, deja `TRUST_PROXY` sin definir o en `false`.
+
+## Registro, privacidad y seguridad
+
+El dominio debe ser exactamente `pucp.edu.pe`: se rechazan subdominios, sufijos adicionales y otros proveedores, aunque se llame directamente a la API. Se normalizan espacios exteriores y mayúsculas. Esto **no verifica la titularidad del correo**; no hay correo de confirmación ni SSO.
+
+Las cuentas nuevas deben aceptar dos casillas distintas: términos de uso y tratamiento de datos necesarios para el servicio. Se guardan `termsAcceptedAt`, `termsVersion`, `privacyAcceptedAt` y `privacyVersion` con hora y versión decididas por el servidor. La migración añade campos opcionales: no borra cuentas ni inventa autorizaciones para usuarios anteriores, administrador o demo. No se exige marcar casillas otra vez en cada inicio de sesión. El aviso también se enlaza desde login y el pie de la aplicación.
+
+Las contraseñas de registros nuevos requieren al menos 15 caracteres y como máximo 72 bytes UTF-8, para no truncarlas en bcrypt. Se permiten espacios y caracteres Unicode dentro de ese límite. Las contraseñas existentes y las de la demo siguen funcionando; no se restablecen al actualizar.
+
+El aviso publica el correo autorizado `luis.taquirid@pucp.edu.pe` para solicitudes sobre datos. Describe perfil visible, conversación privada, cookie técnica, alojamiento AWS en Estados Unidos y atención manual de derechos. No hay publicidad ni cookies de analítica. El equipo debe atender esas solicitudes y revisar sus respaldos: no existe un sistema automático de borrado ni este texto certifica cumplimiento jurídico. Antes de abrir el servicio a gran escala, debe revisarse la identidad y domicilio del responsable, conservación, banco de datos y transferencias internacionales conforme a la normativa aplicable.
+
+Al actualizar una instalación existente basta con `git pull` y `docker compose up -d --build --wait --wait-timeout 180`. El arranque aplica la migración aditiva, conservando datos e imágenes. Haz un respaldo previo para cualquier cambio de esquema.
+
+La revisión y los límites conocidos se documentan en [docs/SECURITY.md](docs/SECURITY.md).
 
 ## Datos de demostración
 

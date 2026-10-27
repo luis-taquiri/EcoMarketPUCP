@@ -10,7 +10,10 @@ async function main() {
     ["Valeria Castro", "valeria.demo@pucp.edu.pe", "Ciencias e Ingeniería"],
     ["Marco Paredes", "marco.demo@pucp.edu.pe", "Arquitectura"],
   ];
-  const passwordHash = await hash(process.env.DEMO_PASSWORD || "EcoCampus2026!", 12);
+  const password = process.env.DEMO_PASSWORD || "EcoCampus2026!";
+  if (password.length < 8 || Buffer.byteLength(password, "utf8") > 72)
+    throw new Error("La contraseña demo debe tener al menos 8 caracteres y máximo 72 bytes.");
+  const passwordHash = await hash(password, 12);
   const created = await db.$transaction(async (tx) => {
     const existing = await tx.user.count({
       where: { email: { in: people.map((person) => person[1]) } },

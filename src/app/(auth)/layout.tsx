@@ -3,6 +3,7 @@ import { Campus } from "@/components/campus";
 import { Sprout } from "lucide-react";
 import { currentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { LegalLinks } from "@/components/legal-links";
 export default async function AuthLayout({ children }: { children: React.ReactNode }) {
   if (await currentUser()) redirect("/explorar");
   return (
@@ -41,6 +42,7 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
       </div>
       <footer className="auth-footer">
         EcoMarket PUCP <span>Menos desperdicio. Más comunidad.</span>
+        <LegalLinks />
       </footer>
     </main>
   );

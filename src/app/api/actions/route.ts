@@ -3,7 +3,9 @@ import { compare, hash } from "bcryptjs";
 import { z } from "zod";
 import { db } from "@/lib/db";
 import { requireUser, signIn, signOut } from "@/lib/auth";
-import { apiError, sameOrigin, limitLogin, readLimited } from "@/lib/http";
+import { apiError, sameOrigin, limitAuthentication, readLimited } from "@/lib/http";
+import { limitAttempts } from "@/lib/rate-limit";
+import { PRIVACY_VERSION, TERMS_VERSION } from "@/lib/legal";
 import {
   ensure,
   AppError,
@@ -16,6 +18,7 @@ import {
 import { actOnTrade, propose } from "@/lib/trades";
 import { photos } from "@/lib/constants";
 export const runtime = "nodejs";
+const DUMMY_PASSWORD_HASH = "$2b$12$aRyszmZ47zhY0tto9qUireJQ1/VICJK7KbhCOUh7Yjpo5VKt2Qnsm";
 export async function POST(request: NextRequest) {
   try {
     sameOrigin(request);
@@ -31,24 +34,30 @@ export async function POST(request: NextRequest) {
       .parse(json);
     if (action === "register") {
       const parsed = registerSchema.parse(data);
-      limitLogin(parsed.email);
-      const { password, ...profile } = parsed;
+      limitAuthentication(request, parsed.email);
+      const { password, acceptTerms: _terms, consentData: _privacy, ...profile } = parsed;
+      const acceptedAt = new Date();
       const user = await db.user.create({
-        data: { ...profile, passwordHash: await hash(password, 12) },
+        data: {
+          ...profile,
+          role: "STUDENT",
+          passwordHash: await hash(password, 12),
+          termsAcceptedAt: acceptedAt,
+          termsVersion: TERMS_VERSION,
+          privacyAcceptedAt: acceptedAt,
+          privacyVersion: PRIVACY_VERSION,
+        },
       });
       await signIn(user.id);
       return NextResponse.json({ ok: true });
     }
     if (action === "login") {
       const email = emailSchema.parse(data.email);
-      const password = z.string().max(72).parse(data.password);
-      limitLogin(email);
+      const password = z.string().min(1).max(72).parse(data.password);
+      limitAuthentication(request, email);
       const user = await db.user.findUnique({ where: { email } });
-      ensure(
-        user && !user.disabled && (await compare(password, user.passwordHash)),
-        "Correo o contraseña incorrectos.",
-        401,
-      );
+      const passwordMatches = await compare(password, user?.passwordHash || DUMMY_PASSWORD_HASH);
+      ensure(user && !user.disabled && passwordMatches, "Correo o contraseña incorrectos.", 401);
       await signIn(user.id);
       return NextResponse.json({ ok: true });
     }
@@ -57,6 +66,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ ok: true });
     }
     const user = await requireUser();
+    limitAttempts(`actions:${user.id}`, 120, 60 * 1000);
     const id = () => z.string().min(1).parse(data.id);
     if (action === "profile") {
       await db.user.update({ where: { id: user.id }, data: profileSchema.parse(data) });
