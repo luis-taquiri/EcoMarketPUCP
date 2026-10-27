@@ -43,8 +43,6 @@ async function main() {
     const materials = [
       {
         title: "Lecturas de Realidad Peruana",
-        impactMaterial: "OFFICE_PAPER",
-        paperSheets: 120,
         category: "Impresos y apuntes",
         course: "Realidad Social Peruana",
         kind: "TRADE",
@@ -61,8 +59,6 @@ async function main() {
       },
       {
         title: "Prácticas de Cálculo Diferencial",
-        impactMaterial: "OFFICE_PAPER",
-        paperSheets: 100,
         category: "Impresos y apuntes",
         course: "Cálculo 1",
         kind: "TRADE",
@@ -71,8 +67,6 @@ async function main() {
       },
       {
         title: "Libro de Economía · Mankiw",
-        impactMaterial: "TEXTBOOK",
-        weightGrams: 500,
         category: "Libros",
         course: "Economía General",
         kind: "DONATION",
@@ -81,8 +75,6 @@ async function main() {
       },
       {
         title: "Resúmenes de Estadística",
-        impactMaterial: "OFFICE_PAPER",
-        paperSheets: 80,
         category: "Impresos y apuntes",
         course: "Estadística Aplicada",
         kind: "TRADE",

@@ -36,12 +36,10 @@ Al revisar las dependencias, Next.js 15.5.28 y sharp 0.35.5 ya incluyen las corr
 
 Referencias técnicas: [OWASP Authentication](https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html) y [OWASP Password Storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html).
 
-## Ampliación: acceso e impacto ecológico
+## Ampliación: gestión de usuarios
 
 El panel `/admin/usuarios` selecciona solo datos necesarios para gestionar el acceso; no envía hashes ni sesiones al navegador. Su página y la acción de cambio de estado exigen rol ADMIN activo en el servidor. No permite bloquear al administrador ni a otras cuentas ADMIN. Deshabilitar y reactivar revocan sesiones; el login vuelve a comprobar el estado dentro de la transacción que crea la sesión. Los acuerdos aceptados se conservan y no se cancelan de forma silenciosa.
 
 Las publicaciones de cuentas deshabilitadas no se muestran en catálogo, tablón, favoritos o perfil comunitario. Las fotos de un acuerdo histórico siguen disponibles para el participante activo, pero no para usuarios ajenos. No se pueden aceptar nuevas propuestas con cuentas deshabilitadas.
-
-El impacto es privado, con cantidades validadas en el servidor, fuente y supuestos explícitos y registros únicos por material. No se permite editar los datos de una publicación reservada o entregada ni recalcular su historial mediante nuevas confirmaciones.
 
 Por indicación del usuario no se ejecutaron pruebas para esta ampliación. Las cifras de pruebas de la revisión anterior no certifican estas funcionalidades nuevas.

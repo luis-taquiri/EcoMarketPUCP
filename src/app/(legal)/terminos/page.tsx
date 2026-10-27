@@ -73,11 +73,6 @@ export default function Terms() {
       <section>
         <h2>Datos y contacto</h2>
         <p>
-          Las cifras ambientales son estimaciones educativas basadas en datos declarados y supuestos
-          de fabricación evitada. No equivalen a compensaciones de carbono ni certifican árboles
-          salvados. La metodología y sus límites están disponibles en tu sección de impacto.
-        </p>
-        <p>
           El tratamiento de datos se explica en el{" "}
           <Link href="/privacidad">aviso de privacidad</Link> y se autoriza por separado durante el
           registro. Estas condiciones no limitan derechos reconocidos por la normativa aplicable.

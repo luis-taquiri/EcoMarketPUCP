@@ -2,7 +2,6 @@ import { db } from "./db";
 import { ensure } from "./validation";
 import { LOCATIONS } from "./constants";
 import { z } from "zod";
-import { estimateImpact } from "./impact";
 const proposal = z.object({
   targetId: z.string().min(1),
   offeredId: z.string().nullable().optional(),
@@ -163,21 +162,6 @@ export async function actOnTrade(
           data: receiver ? { receiverConfirmed: true } : { requesterConfirmed: true },
         });
         if (updated.receiverConfirmed && updated.requesterConfirmed) {
-          const materials = await tx.listing.findMany({ where: { id: { in: ids } } });
-          for (const material of materials) {
-            const impact = estimateImpact(material);
-            if (impact)
-              await tx.impactEntry.upsert({
-                where: { listingId: material.id },
-                create: {
-                  ...impact,
-                  listingId: material.id,
-                  tradeId: trade.id,
-                  userId: material.userId,
-                },
-                update: {},
-              });
-          }
           await tx.listing.updateMany({
             where: { id: { in: ids }, status: "RESERVED" },
             data: { status: "EXCHANGED" },

@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ImagePlus, X, ArrowLeftRight, Gift, Upload, Leaf } from "lucide-react";
+import { ImagePlus, X, ArrowLeftRight, Gift, Upload } from "lucide-react";
 import Link from "next/link";
 import { CATEGORIES, FACULTIES, CONDITIONS, LOCATIONS } from "@/lib/constants";
 import { api, ErrorText, Submit } from "./client-ui";
@@ -17,19 +17,11 @@ export type ListingInput = {
   wanted?: string;
   location?: string;
   images?: string[];
-  impactMaterial?: string;
-  paperSheets?: number | null;
-  weightGrams?: number | null;
 };
 export function ListingForm({ initial = {} }: { initial?: ListingInput }) {
   const router = useRouter();
   const [images, setImages] = useState(initial.images || []);
   const [kind, setKind] = useState(initial.kind || "TRADE");
-  const [category, setCategory] = useState(initial.category || CATEGORIES[0]);
-  const [impactMaterial, setImpactMaterial] = useState(initial.impactMaterial || "NONE");
-  const [measurement, setMeasurement] = useState(initial.weightGrams ? "weight" : "sheets");
-  const [sheets, setSheets] = useState(initial.paperSheets?.toString() || "");
-  const [weight, setWeight] = useState(initial.weightGrams?.toString() || "");
   const [uploading, setUploading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -70,14 +62,6 @@ export function ListingForm({ initial = {} }: { initial?: ListingInput }) {
             ...fields,
             kind,
             images,
-            impactMaterial,
-            paperSheets:
-              impactMaterial === "OFFICE_PAPER" && measurement === "sheets" ? sheets : null,
-            weightGrams:
-              impactMaterial === "TEXTBOOK" ||
-              (impactMaterial === "OFFICE_PAPER" && measurement === "weight")
-                ? weight
-                : null,
             ...(initial.id ? { id: initial.id } : {}),
           });
           router.push(`/materiales/${result.id}`);
@@ -158,14 +142,7 @@ export function ListingForm({ initial = {} }: { initial?: ListingInput }) {
         </label>
         <label>
           Categoría
-          <select
-            name="category"
-            value={category}
-            onChange={(e) => {
-              setCategory(e.target.value);
-              setImpactMaterial("NONE");
-            }}
-          >
+          <select name="category" defaultValue={initial.category || CATEGORIES[0]}>
             {CATEGORIES.map((c) => (
               <option key={c}>{c}</option>
             ))}
@@ -189,101 +166,6 @@ export function ListingForm({ initial = {} }: { initial?: ListingInput }) {
           </select>
         </label>
       </div>
-      {(category === "Impresos y apuntes" || category === "Libros") && (
-        <fieldset className="environment-fields">
-          <legend>
-            <Leaf size={17} />
-            Información ambiental (opcional)
-          </legend>
-          <label>
-            Tipo de material para la estimación
-            <select value={impactMaterial} onChange={(e) => setImpactMaterial(e.target.value)}>
-              <option value="NONE">Sin estimación ambiental</option>
-              {category === "Impresos y apuntes" && (
-                <option value="OFFICE_PAPER">Papel de oficina o apuntes impresos</option>
-              )}
-              {category === "Libros" && <option value="TEXTBOOK">Libro de texto</option>}
-            </select>
-          </label>
-          {impactMaterial === "OFFICE_PAPER" && (
-            <>
-              <div className="paper-measurement" role="group" aria-label="Medición del papel">
-                <label className="radio-line">
-                  <input
-                    type="radio"
-                    name="measurement"
-                    value="sheets"
-                    checked={measurement === "sheets"}
-                    onChange={() => setMeasurement("sheets")}
-                  />
-                  Hojas A4 de 80 g/m²
-                </label>
-                <label className="radio-line">
-                  <input
-                    type="radio"
-                    name="measurement"
-                    value="weight"
-                    checked={measurement === "weight"}
-                    onChange={() => setMeasurement("weight")}
-                  />
-                  Peso en gramos
-                </label>
-              </div>
-              {measurement === "sheets" ? (
-                <label>
-                  Número de hojas físicas A4
-                  <input
-                    type="number"
-                    name="paperSheets"
-                    min={1}
-                    max={20000}
-                    step={1}
-                    required
-                    value={sheets}
-                    onChange={(e) => setSheets(e.target.value)}
-                    placeholder="Ej. 120"
-                  />
-                </label>
-              ) : (
-                <label>
-                  Peso total del papel (g)
-                  <input
-                    type="number"
-                    name="weightGrams"
-                    min={1}
-                    max={100000}
-                    step={1}
-                    required
-                    value={weight}
-                    onChange={(e) => setWeight(e.target.value)}
-                    placeholder="Ej. 600"
-                  />
-                </label>
-              )}
-            </>
-          )}
-          {impactMaterial === "TEXTBOOK" && (
-            <label>
-              Peso total del libro de texto (g)
-              <input
-                type="number"
-                name="weightGrams"
-                min={1}
-                max={100000}
-                step={1}
-                required
-                value={weight}
-                onChange={(e) => setWeight(e.target.value)}
-                placeholder="Ej. 500"
-              />
-            </label>
-          )}
-          <p className="muted small">
-            Datos declarados, no verificados. En papel se cuentan hojas físicas, no páginas
-            impresas. El libro requiere peso real; no se deduce por su número de páginas.
-          </p>
-        </fieldset>
-      )}
       <label>
         Descripción
         <textarea

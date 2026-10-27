@@ -70,9 +70,6 @@ export default function Privacy() {
       <section>
         <h2>Tu decisión y tus derechos</h2>
         <p>
-          Si declaras hojas o peso de un material, también calculamos una estimación educativa de su
-          reutilización tras completar la entrega. El historial y el nivel ambiental se muestran
-          únicamente en tu propia cuenta; no son mediciones verificadas ni un perfil comercial.
           Administración puede deshabilitar o reactivar cuentas para atender incidencias, sin borrar
           automáticamente sus datos.
         </p>
