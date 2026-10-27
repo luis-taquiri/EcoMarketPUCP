@@ -86,9 +86,6 @@ export default async function Explore({
               <span>
                 <b>{completed}</b> intercambios completados
               </span>
-              <span>
-                <b>0</b> pagos
-              </span>
             </div>
           </div>
           <Campus />

@@ -1,10 +1,12 @@
 import Link from "next/link";
-import { ArrowRight, Plus, Star, Sprout, Gift, ArrowLeftRight } from "lucide-react";
+import { ArrowRight, Plus, Star } from "lucide-react";
 import { requirePageUser } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { Avatar, Empty, Badge } from "@/components/ui";
 import { ListingCard } from "@/components/listing-card";
 import { ProfileForm } from "@/components/profile-form";
+import { ImpactPanel } from "@/components/impact-panel";
+import { getImpactSummary } from "@/lib/impact-summary";
 export default async function Profile({
   searchParams,
 }: {
@@ -15,7 +17,11 @@ export default async function Profile({
   const favorite = s.tab === "favorites";
   const archived = s.tab === "archived";
   const where = favorite
-    ? { favorites: { some: { userId: user.id } }, status: { not: "ARCHIVED" } }
+    ? {
+        favorites: { some: { userId: user.id } },
+        status: { not: "ARCHIVED" },
+        user: { disabled: false },
+      }
     : { userId: user.id, ...(archived ? { status: "ARCHIVED" } : { status: { not: "ARCHIVED" } }) };
   const total = await db.listing.count({ where });
   const pages = Math.max(1, Math.ceil(total / 12));
@@ -30,12 +36,7 @@ export default async function Profile({
     take: 12,
     skip: (page - 1) * 12,
   });
-  const completed = await db.trade.count({
-    where: { status: "COMPLETED", OR: [{ requesterId: user.id }, { receiverId: user.id }] },
-  });
-  const donated = await db.trade.count({
-    where: { status: "COMPLETED", receiverId: user.id, offeredId: null },
-  });
+  const impact = await getImpactSummary(user.id);
   const active = await db.trade.findMany({
     where: { status: "ACCEPTED", OR: [{ requesterId: user.id }, { receiverId: user.id }] },
     include: {
@@ -147,26 +148,7 @@ export default async function Profile({
             </nav>
           )}
         </section>
-        <aside className="impact-panel">
-          <p className="eyebrow">TU ACTIVIDAD</p>
-          <h2>Tu aporte a la comunidad</h2>
-          <Sprout size={45} />
-          <div>
-            <b>{completed}</b>
-            <span>
-              <ArrowLeftRight size={17} />
-              intercambios completados
-            </span>
-          </div>
-          <div>
-            <b>{donated}</b>
-            <span>
-              <Gift size={17} />
-              donaciones entregadas
-            </span>
-          </div>
-          <p className="small muted">Cifras de entregas confirmadas por ambas personas.</p>
-        </aside>
+        <ImpactPanel summary={impact} />
       </div>
     </div>
   );

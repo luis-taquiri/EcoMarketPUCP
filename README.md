@@ -17,7 +17,8 @@ Una sola aplicación: Next.js + React + TypeScript + Tailwind/CSS, Prisma, SQLit
 - Aceptar/rechazar/cancelar, reservar los materiales, conversación privada, lugar y hora de encuentro y confirmación de ambas personas.
 - Valoraciones una vez por participante, después de completar la entrega.
 - Reportes de publicaciones/conducta y panel de moderación para un administrador.
-- Contadores calculados de la base de datos, no cifras ambientales inventadas.
+- Contadores calculados de la base de datos y estimación ambiental trazable para papel y libros de texto, solo tras confirmar las entregas.
+- Panel `/admin/usuarios` con búsqueda por correo, filtro de estado y deshabilitación/reactivación de cuentas de estudiantes.
 
 **Es un prototipo estudiantil, no un servicio oficial de PUCP.** Se valida el formato del correo, pero no su titularidad. No hay SSO institucional, envío de correos, recuperación por email ni verificación oficial de identidad. No se anuncian usuarios como “verificados”. Para abrirlo a una comunidad real, hace falta acordar la verificación de estudiantes y quién atiende los reportes.
 
@@ -108,7 +109,19 @@ docker compose up -d
 
 Al iniciar, se crea el administrador si ese correo no existe. **No se cambia la contraseña ni se asciende a un usuario existente automáticamente.** Utiliza una dirección distinta de las cuentas ya registradas. Después de comprobar el acceso, puedes quitar la contraseña de `.env` y ejecutar otra vez `docker compose up -d`; la cuenta queda en SQLite.
 
-El administrador ve **Moderación** en la navegación. Puede revisar reportes y archivar publicaciones disponibles; no accede a conversaciones privadas. No se archiva un material reservado o entregado para evitar romper acuerdos.
+El administrador ve **Administración** en la navegación. Puede revisar reportes y archivar publicaciones disponibles; no accede a conversaciones privadas. No se archiva un material reservado o entregado para evitar romper acuerdos.
+
+En **Administración → Usuarios** (`/admin/usuarios`) puede buscar por correo, filtrar activas/deshabilitadas y paginar de 20 en 20. Deshabilitar cierra las sesiones y bloquea login, rutas protegidas y acciones. Las publicaciones se ocultan de la comunidad; los datos y acuerdos aceptados se conservan. Reactivar exige iniciar sesión otra vez: las cookies antiguas no se recuperan. No puede deshabilitarse a sí mismo ni a otra cuenta administradora desde este panel. No se cancelan acuerdos aceptados automáticamente; el participante activo puede cancelar si todavía no existe una confirmación, o solicitar revisión por el canal de contacto.
+
+## Impacto ecológico
+
+El perfil incorpora **Tu huella positiva** y un enlace a `/impacto`, con historial privado y metodología. Al publicar o editar un material disponible, es opcional declarar hojas A4 de 80 g/m² o peso en gramos para papel de oficina; los libros de texto requieren peso. No se estiman útiles, tecnología ni materiales sin datos.
+
+El servidor registra una entrada inmutable al completarse la segunda confirmación, dentro de la misma transacción. En trueques se consideran los dos objetos; en donaciones, uno. Cada material se atribuye solo a quien lo entrega y tiene una clave única para impedir duplicaciones. No se asignan pesos ni impacto retroactivo a registros anteriores. Una nueva ejecución del seed tampoco cambia las publicaciones demo ya existentes; los ejemplos nuevos sí incluyen cantidades ficticias claramente declaradas como demo.
+
+Factores educativos: 1,13 kg CO₂e/kg de papel y 2,43 kg CO₂e/kg de libro de texto, solo fabricación según EPA (2006). Las hojas A4 equivalentes no incluyen páginas de libros. El peso, factor, método y resultado se conservan para que cambios futuros no alteren el historial. Los niveles no representan árboles plantados o salvados. Fuente, fórmula y límites: [docs/IMPACTO.md](docs/IMPACTO.md).
+
+Esta versión incorpora una migración aditiva y actualiza los textos legales a `2026-10-27.2`; no modifica aceptaciones anteriores ni las atribuye retroactivamente. Para actualizar AWS, conserva `.env` y los volúmenes, haz un respaldo y ejecuta `git pull --ff-only` seguido de `sudo docker compose up -d --build --wait --wait-timeout 180`.
 
 Para restablecer una contraseña desde la VM, usa el script local e interactivo:
 
@@ -255,6 +268,6 @@ tests/               Pruebas de validación y reglas de negocio
 
 Una instancia de la aplicación y una base SQLite local, no un clúster. El límite práctico depende del disco, RAM, imágenes y concurrencia; no se promete almacenamiento ilimitado. Hay paginación del catálogo, pedidos, solicitudes y publicaciones propias. El chat se actualiza cada 10 segundos mientras la pestaña está visible, sin WebSockets ni servicios externos.
 
-No hay envío de correos, notificaciones push, préstamos, pagos ni cálculo de CO₂. El código es deliberadamente sencillo; antes de una apertura pública amplia se deben reforzar la verificación institucional, prevención de abuso, moderación, política de privacidad y respaldo periódico.
+No hay envío de correos, notificaciones push, préstamos ni pagos. La estimación de CO₂e no es una medición ni una certificación. El código es deliberadamente sencillo; antes de una apertura pública amplia se deben reforzar la verificación institucional, prevención de abuso, moderación, política de privacidad y respaldo periódico.
 
 Referencias visuales y licencias: [docs/ASSETS.md](docs/ASSETS.md).

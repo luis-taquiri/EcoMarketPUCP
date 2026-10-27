@@ -14,7 +14,8 @@ export async function GET(_request: Request, { params }: { params: Promise<{ nam
     const visible = await db.$queryRaw<{ id: string }[]>`
       SELECT l.id FROM "Listing" l, json_each(l.images) photo
       WHERE l.userId = ${upload.userId} AND photo.value = ${`/uploads/${name}`}
-      AND (l.status IN ('AVAILABLE', 'RESERVED', 'EXCHANGED') OR EXISTS (
+      AND ((l.status IN ('AVAILABLE', 'RESERVED', 'EXCHANGED')
+        AND EXISTS (SELECT 1 FROM "User" owner WHERE owner.id = l.userId AND owner.disabled = 0)) OR EXISTS (
         SELECT 1 FROM "Trade" t
         WHERE (t.targetId = l.id OR t.offeredId = l.id)
         AND (t.requesterId = ${user.id} OR t.receiverId = ${user.id})

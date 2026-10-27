@@ -5,6 +5,7 @@ import { requirePageUser } from "@/lib/auth";
 import { PageTitle, Badge, Empty } from "@/components/ui";
 import { ActionButton } from "@/components/client-ui";
 import { date } from "@/lib/constants";
+import { AdminTabs } from "@/components/admin-tabs";
 export default async function Admin({
   searchParams,
 }: {
@@ -33,6 +34,7 @@ export default async function Admin({
         title="Revisión de reportes"
         description={`${count} reportes pendientes de revisión.`}
       />
+      <AdminTabs active="reports" />
       {reports.map((r) => (
         <article className="wanted-item" key={r.id}>
           <div className="person-line">

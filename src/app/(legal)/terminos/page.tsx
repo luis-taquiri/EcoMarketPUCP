@@ -54,6 +54,12 @@ export default function Terms() {
       <section>
         <h2>Moderación y disponibilidad</h2>
         <p>
+          Administración puede deshabilitar y reactivar el acceso de cuentas de estudiantes para
+          atender incumplimientos o incidencias de seguridad. Al deshabilitar se cierran sus
+          sesiones y se ocultan sus publicaciones, pero se conservan los datos y los acuerdos
+          existentes. Puedes solicitar una revisión mediante el correo de contacto.
+        </p>
+        <p>
           Puedes reportar publicaciones o conductas desde la aplicación. El administrador revisa
           reportes y puede archivar materiales disponibles conforme a las reglas del proyecto. Las
           valoraciones deben reflejar intercambios realmente completados.
@@ -66,6 +72,11 @@ export default function Terms() {
       </section>
       <section>
         <h2>Datos y contacto</h2>
+        <p>
+          Las cifras ambientales son estimaciones educativas basadas en datos declarados y supuestos
+          de fabricación evitada. No equivalen a compensaciones de carbono ni certifican árboles
+          salvados. La metodología y sus límites están disponibles en tu sección de impacto.
+        </p>
         <p>
           El tratamiento de datos se explica en el{" "}
           <Link href="/privacidad">aviso de privacidad</Link> y se autoriza por separado durante el

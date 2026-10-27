@@ -32,6 +32,7 @@ model User {
   reviews      Review[]  @relation("Reviewer")
   ratings      Review[]  @relation("Reviewed")
   reports      Report[]
+  impactEntries ImpactEntry[]
 }
 model Session {
   tokenHash String @id
@@ -60,6 +61,9 @@ model Listing {
   location    String @default("Biblioteca Central")
   images      Json
   status      String @default("AVAILABLE")
+  impactMaterial String @default("NONE")
+  paperSheets Int?
+  weightGrams Int?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   user        User @relation(fields: [userId], references: [id])
@@ -68,6 +72,7 @@ model Listing {
   offered     Trade[] @relation("Offer")
   responses   WantedResponse[]
   reports     Report[]
+  impactEntry ImpactEntry?
   @@index([status, createdAt])
   @@index([userId, status])
 }
@@ -123,6 +128,7 @@ model Trade {
   offered            Listing? @relation("Offer", fields: [offeredId], references: [id])
   messages           Message[]
   reviews            Review[]
+  impactEntries      ImpactEntry[]
   @@index([requesterId, status])
   @@index([receiverId, status])
   @@index([targetId, status])
@@ -162,4 +168,23 @@ model Report {
   user      User @relation(fields: [userId], references: [id])
   listing   Listing @relation(fields: [listingId], references: [id])
   @@index([status, createdAt])
+}
+
+model ImpactEntry {
+  id             String @id @default(cuid())
+  listingId      String @unique
+  tradeId        String
+  userId         String
+  material       String
+  weightGrams    Float
+  paperSheets    Int
+  factorKgCo2PerKg Float
+  co2Grams       Int
+  methodVersion  String
+  createdAt      DateTime @default(now())
+  listing        Listing @relation(fields: [listingId], references: [id])
+  trade          Trade @relation(fields: [tradeId], references: [id])
+  user           User @relation(fields: [userId], references: [id])
+  @@index([userId, createdAt])
+  @@index([tradeId])
 }

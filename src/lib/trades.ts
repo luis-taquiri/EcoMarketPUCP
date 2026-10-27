@@ -2,6 +2,7 @@ import { db } from "./db";
 import { ensure } from "./validation";
 import { LOCATIONS } from "./constants";
 import { z } from "zod";
+import { estimateImpact } from "./impact";
 const proposal = z.object({
   targetId: z.string().min(1),
   offeredId: z.string().nullable().optional(),
@@ -10,6 +11,11 @@ const proposal = z.object({
 export async function propose(userId: string, input: unknown) {
   const data = proposal.parse(input);
   return db.$transaction(async (tx) => {
+    ensure(
+      await tx.user.count({ where: { id: userId, disabled: false } }),
+      "Tu cuenta no tiene acceso.",
+      403,
+    );
     const target = await tx.listing.findUnique({
       where: { id: data.targetId },
       include: { user: true },
@@ -60,10 +66,22 @@ export async function actOnTrade(
     async (tx) => {
       const trade = await tx.trade.findUnique({ where: { id } });
       ensure(trade, "Solicitud no encontrada.", 404);
+      ensure(
+        await tx.user.count({ where: { id: userId, disabled: false } }),
+        "Tu cuenta no tiene acceso.",
+        403,
+      );
       const receiver = trade.receiverId === userId;
       ensure(receiver || trade.requesterId === userId, "No tienes acceso a esta solicitud.", 403);
       const ids = [trade.targetId, ...(trade.offeredId ? [trade.offeredId] : [])];
       if (action === "accept") {
+        ensure(
+          (await tx.user.count({
+            where: { id: { in: [trade.requesterId, trade.receiverId] }, disabled: false },
+          })) === 2,
+          "Una de las cuentas está deshabilitada. No se puede aceptar la propuesta.",
+          409,
+        );
         ensure(
           receiver && trade.status === "PENDING",
           "Solo quien recibe una propuesta pendiente puede aceptarla.",
@@ -145,6 +163,21 @@ export async function actOnTrade(
           data: receiver ? { receiverConfirmed: true } : { requesterConfirmed: true },
         });
         if (updated.receiverConfirmed && updated.requesterConfirmed) {
+          const materials = await tx.listing.findMany({ where: { id: { in: ids } } });
+          for (const material of materials) {
+            const impact = estimateImpact(material);
+            if (impact)
+              await tx.impactEntry.upsert({
+                where: { listingId: material.id },
+                create: {
+                  ...impact,
+                  listingId: material.id,
+                  tradeId: trade.id,
+                  userId: material.userId,
+                },
+                update: {},
+              });
+          }
           await tx.listing.updateMany({
             where: { id: { in: ids }, status: "RESERVED" },
             data: { status: "EXCHANGED" },

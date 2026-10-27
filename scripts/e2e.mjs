@@ -166,8 +166,8 @@ try {
   assert.notEqual(users[0].passwordHash, "TestCampus2026!");
   for (const user of users) {
     assert.equal(user.role, "STUDENT");
-    assert.equal(user.termsVersion, "2026-10-27");
-    assert.equal(user.privacyVersion, "2026-10-27");
+    assert.equal(user.termsVersion, "2026-10-27.2");
+    assert.equal(user.privacyVersion, "2026-10-27.2");
     assert.ok(user.termsAcceptedAt > new Date("2026-01-01"));
     assert.equal(user.termsAcceptedAt.getTime(), user.privacyAcceptedAt.getTime());
   }
@@ -275,7 +275,7 @@ try {
   await a.action("trade.confirm", { id: t });
   assert.equal((await db.trade.findUnique({ where: { id: t } })).status, "COMPLETED");
   await b.action("trade.review", { id: t, rating: 5, comment: "Una entrega puntual y cordial." });
-  assert.match(await (await a.get("/perfil")).text(), /intercambios completados/);
+  assert.match(await (await a.get("/perfil")).text(), /intercambios(?:<br\s*\/?>|\s)+completados/);
   ok("Propuesta, permisos, reserva, chat, encuentro, doble confirmación y valoración");
   const moderationImage = (await a.upload(photo)).url;
   const donation = (

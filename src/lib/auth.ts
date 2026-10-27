@@ -30,12 +30,19 @@ export async function signIn(userId: string) {
   const previous = jar.get(COOKIE)?.value;
   const token = randomBytes(32).toString("hex");
   const expires = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-  await db.session.deleteMany({
-    where: {
-      OR: [{ expiresAt: { lt: new Date() } }, ...(previous ? [{ tokenHash: hash(previous) }] : [])],
-    },
+  await db.$transaction(async (tx) => {
+    const account = await tx.user.findUnique({ where: { id: userId }, select: { disabled: true } });
+    if (!account || account.disabled) throw new AppError("Correo o contraseña incorrectos.", 401);
+    await tx.session.deleteMany({
+      where: {
+        OR: [
+          { expiresAt: { lt: new Date() } },
+          ...(previous ? [{ tokenHash: hash(previous) }] : []),
+        ],
+      },
+    });
+    await tx.session.create({ data: { tokenHash: hash(token), userId, expiresAt: expires } });
   });
-  await db.session.create({ data: { tokenHash: hash(token), userId, expiresAt: expires } });
   jar.set(COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",

@@ -48,7 +48,7 @@ export function Header({
           ))}
           {admin && (
             <Link href="/admin" onClick={() => setOpen(false)}>
-              Moderación
+              Administración
             </Link>
           )}
           <div className="nav-logout">

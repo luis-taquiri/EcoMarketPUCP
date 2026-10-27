@@ -28,6 +28,16 @@ export const registerSchema = profileSchema.extend({
     error: "Debes autorizar el tratamiento de datos descrito en el aviso de privacidad.",
   }),
 });
+const optionalAmount = (max: number) =>
+  z.preprocess(
+    (value) =>
+      value === "" || value === null || value === undefined
+        ? null
+        : typeof value === "string"
+          ? Number(value)
+          : value,
+    z.number().int().min(1).max(max).nullable(),
+  );
 export const listingSchema = z
   .object({
     title: z.string().trim().min(5, "El título debe tener al menos 5 caracteres.").max(100),
@@ -44,10 +54,31 @@ export const listingSchema = z
     wanted: z.string().trim().max(500).default(""),
     location: z.enum(LOCATIONS),
     images: z.array(z.string().max(200)).min(1, "Agrega al menos una foto.").max(5),
+    impactMaterial: z.enum(["NONE", "OFFICE_PAPER", "TEXTBOOK"]).default("NONE"),
+    paperSheets: optionalAmount(20000),
+    weightGrams: optionalAmount(100000),
   })
   .refine((d) => d.kind !== "TRADE" || d.wanted.length >= 3, {
     message: "Indica qué material buscas a cambio.",
     path: ["wanted"],
+  })
+  .superRefine((data, ctx) => {
+    const issue = (message: string) =>
+      ctx.addIssue({ code: "custom", message, path: ["impactMaterial"] });
+    if (data.impactMaterial === "NONE") {
+      if (data.paperSheets !== null || data.weightGrams !== null)
+        issue("Elige el tipo de material para registrar hojas o peso.");
+    } else if (data.impactMaterial === "OFFICE_PAPER") {
+      if (data.category !== "Impresos y apuntes")
+        issue("La estimación de papel corresponde a impresos y apuntes.");
+      if ((data.paperSheets === null) === (data.weightGrams === null))
+        issue("Indica las hojas A4 o el peso del papel, no ambos.");
+    } else {
+      if (data.category !== "Libros")
+        issue("La estimación de libros de texto corresponde a la categoría Libros.");
+      if (data.weightGrams === null || data.paperSheets !== null)
+        issue("Para libros de texto indica su peso en gramos, no páginas ni hojas.");
+    }
   });
 export const wantedSchema = z.object({
   title: z.string().trim().min(5).max(120),

@@ -15,8 +15,8 @@ type TradeData = {
   receiverConfirmed: boolean;
   meetingPlace: string;
   meetingAt: Date | null;
-  requester: { name: string };
-  receiver: { name: string };
+  requester: { name: string; disabled: boolean };
+  receiver: { name: string; disabled: boolean };
   target: { id: string; title: string; images: unknown };
   offered: { id: string; title: string; images: unknown } | null;
   messages: { id: string; userId: string; body: string; createdAt: Date; user: { name: string } }[];
@@ -69,6 +69,11 @@ export function TradeRoom({ trade, userId }: { trade: TradeData; userId: string 
       </div>
       <div className="trade-layout">
         <section className="trade-summary">
+          {partner.disabled && (
+            <p className="notice" role="status">
+              La otra cuenta está deshabilitada y no puede responder.
+            </p>
+          )}
           <h2>Los materiales</h2>
           <Link href={`/materiales/${trade.target.id}`} className="trade-object">
             <img src={photos(trade.target.images)[0]} alt="" />
@@ -105,7 +110,7 @@ export function TradeRoom({ trade, userId }: { trade: TradeData; userId: string 
               Entrega confirmada por ambos
             </li>
           </ol>
-          {receiver && trade.status === "PENDING" && (
+          {receiver && trade.status === "PENDING" && !partner.disabled && (
             <div className="button-row">
               <ActionButton
                 action="trade.accept"

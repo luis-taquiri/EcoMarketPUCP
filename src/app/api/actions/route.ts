@@ -6,6 +6,7 @@ import { requireUser, signIn, signOut } from "@/lib/auth";
 import { apiError, sameOrigin, limitAuthentication, readLimited } from "@/lib/http";
 import { limitAttempts } from "@/lib/rate-limit";
 import { PRIVACY_VERSION, TERMS_VERSION } from "@/lib/legal";
+import { setUserDisabled } from "@/lib/admin";
 import {
   ensure,
   AppError,
@@ -68,7 +69,10 @@ export async function POST(request: NextRequest) {
     const user = await requireUser();
     limitAttempts(`actions:${user.id}`, 120, 60 * 1000);
     const id = () => z.string().min(1).parse(data.id);
-    if (action === "profile") {
+    if (action === "admin.user-status") {
+      const disabled = z.boolean().parse(data.disabled);
+      await setUserDisabled(user.id, id(), disabled);
+    } else if (action === "profile") {
       await db.user.update({ where: { id: user.id }, data: profileSchema.parse(data) });
     } else if (action === "listing.save") {
       const parsed = listingSchema.parse(data);
@@ -151,7 +155,9 @@ export async function POST(request: NextRequest) {
           });
       });
     } else if (action === "favorite") {
-      const listing = await db.listing.findUnique({ where: { id: id() } });
+      const listing = await db.listing.findFirst({
+        where: { id: id(), user: { disabled: false } },
+      });
       ensure(listing && listing.status !== "ARCHIVED", "Material no encontrado.", 404);
       const key = { userId: user.id, listingId: listing.id };
       if (data.saved === true)
@@ -179,7 +185,9 @@ export async function POST(request: NextRequest) {
           message: z.string().trim().min(5).max(1000),
         })
         .parse(data);
-      const wanted = await db.wanted.findUnique({ where: { id: parsed.id } });
+      const wanted = await db.wanted.findFirst({
+        where: { id: parsed.id, user: { disabled: false } },
+      });
       ensure(
         wanted && wanted.status === "OPEN" && wanted.userId !== user.id,
         "Este pedido ya no admite respuestas.",

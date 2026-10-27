@@ -12,8 +12,8 @@ export default async function RequestDetail({ params }: { params: Promise<{ id: 
     include: {
       target: true,
       offered: true,
-      requester: { select: { name: true } },
-      receiver: { select: { name: true } },
+      requester: { select: { name: true, disabled: true } },
+      receiver: { select: { name: true, disabled: true } },
       messages: { include: { user: { select: { name: true } } }, orderBy: { createdAt: "asc" } },
       reviews: { select: { authorId: true, rating: true, comment: true } },
     },
