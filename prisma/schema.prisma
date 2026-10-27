@@ -1,0 +1,161 @@
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  faculty      String
+  cycle        String    @default("")
+  bio          String    @default("")
+  role         String    @default("STUDENT")
+  disabled     Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  sessions     Session[]
+  listings     Listing[]
+  uploads      Upload[]
+  favorites    Favorite[]
+  wanted       Wanted[]
+  responses    WantedResponse[]
+  sent         Trade[]   @relation("Requester")
+  received     Trade[]   @relation("Receiver")
+  messages     Message[]
+  reviews      Review[]  @relation("Reviewer")
+  ratings      Review[]  @relation("Reviewed")
+  reports      Report[]
+}
+model Session {
+  tokenHash String @id
+  userId    String
+  expiresAt DateTime
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@index([expiresAt])
+}
+model Upload {
+  name      String @id
+  userId    String
+  createdAt DateTime @default(now())
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+model Listing {
+  id          String @id @default(cuid())
+  userId      String
+  title       String
+  description String
+  category    String
+  faculty     String
+  course      String @default("")
+  condition   String
+  kind        String
+  wanted      String @default("")
+  location    String @default("Biblioteca Central")
+  images      Json
+  status      String @default("AVAILABLE")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User @relation(fields: [userId], references: [id])
+  favorites   Favorite[]
+  requested   Trade[] @relation("Target")
+  offered     Trade[] @relation("Offer")
+  responses   WantedResponse[]
+  reports     Report[]
+  @@index([status, createdAt])
+  @@index([userId, status])
+}
+model Favorite {
+  userId    String
+  listingId String
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Cascade)
+  @@id([userId, listingId])
+}
+model Wanted {
+  id          String @id @default(cuid())
+  userId      String
+  title       String
+  description String
+  category    String
+  faculty     String
+  course      String @default("")
+  status      String @default("OPEN")
+  createdAt   DateTime @default(now())
+  user        User @relation(fields: [userId], references: [id])
+  responses   WantedResponse[]
+  @@index([status, createdAt])
+}
+model WantedResponse {
+  id        String @id @default(cuid())
+  wantedId  String
+  userId    String
+  listingId String
+  message   String
+  createdAt DateTime @default(now())
+  wanted    Wanted @relation(fields: [wantedId], references: [id], onDelete: Cascade)
+  user      User @relation(fields: [userId], references: [id])
+  listing   Listing @relation(fields: [listingId], references: [id])
+  @@unique([wantedId, listingId])
+}
+model Trade {
+  id                 String @id @default(cuid())
+  requesterId        String
+  receiverId         String
+  targetId           String
+  offeredId          String?
+  status             String @default("PENDING")
+  requesterConfirmed Boolean @default(false)
+  receiverConfirmed  Boolean @default(false)
+  meetingPlace       String @default("")
+  meetingAt          DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  requester          User @relation("Requester", fields: [requesterId], references: [id])
+  receiver           User @relation("Receiver", fields: [receiverId], references: [id])
+  target             Listing @relation("Target", fields: [targetId], references: [id])
+  offered            Listing? @relation("Offer", fields: [offeredId], references: [id])
+  messages           Message[]
+  reviews            Review[]
+  @@index([requesterId, status])
+  @@index([receiverId, status])
+  @@index([targetId, status])
+  @@index([offeredId, status])
+}
+model Message {
+  id        String @id @default(cuid())
+  tradeId   String
+  userId    String
+  body      String
+  createdAt DateTime @default(now())
+  trade     Trade @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  user      User @relation(fields: [userId], references: [id])
+  @@index([tradeId, createdAt])
+}
+model Review {
+  id         String @id @default(cuid())
+  tradeId    String
+  authorId   String
+  reviewedId String
+  rating     Int
+  comment    String
+  createdAt  DateTime @default(now())
+  trade      Trade @relation(fields: [tradeId], references: [id], onDelete: Cascade)
+  author     User @relation("Reviewer", fields: [authorId], references: [id])
+  reviewed   User @relation("Reviewed", fields: [reviewedId], references: [id])
+  @@unique([tradeId, authorId])
+}
+model Report {
+  id        String @id @default(cuid())
+  userId    String
+  listingId String
+  reason    String
+  details   String
+  status    String @default("OPEN")
+  createdAt DateTime @default(now())
+  user      User @relation(fields: [userId], references: [id])
+  listing   Listing @relation(fields: [listingId], references: [id])
+  @@index([status, createdAt])
+}
