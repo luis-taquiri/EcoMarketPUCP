@@ -14,7 +14,14 @@ function run(args) {
 try {
   run(["--import", "tsx", "scripts/init-db.ts"]);
   run(["node_modules/prisma/build/index.js", "migrate", "deploy"]);
-  run(["--import", "tsx", "--test", "tests/validation.test.ts", "tests/trades.test.ts"]);
+  run([
+    "--import",
+    "tsx",
+    "--test",
+    "tests/validation.test.ts",
+    "tests/trades.test.ts",
+    "tests/seed.test.ts",
+  ]);
 } catch (e) {
   console.error(e.message);
   process.exitCode = 1;

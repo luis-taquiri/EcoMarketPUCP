@@ -47,28 +47,28 @@ docker compose logs -f ecomarket
 
 Edita `.env`. Este archivo no se sube a GitHub.
 
-| Variable         | Para qué sirve                                                                                       |
-| ---------------- | ---------------------------------------------------------------------------------------------------- |
-| `APP_URL`        | Origen exacto donde abrirás la web, sin ruta. En producción, `https://ecomarket.mcserverzcra.co.uk`. |
-| `COOKIE_SECURE`  | `false` para HTTP local; **`true` al publicar con HTTPS**.                                           |
-| `HOST_PORT`      | Puerto local del servidor: `3200`. MarketLite puede seguir en `3000`.                                |
-| `SEED_DEMO`      | `false` por defecto. `true` carga la demo solo cuando no existe ningún usuario.                      |
-| `ADMIN_EMAIL`    | Correo `@pucp.edu.pe` para crear una cuenta administradora inicial, opcional.                        |
-| `ADMIN_PASSWORD` | Contraseña propia de 12 a 72 caracteres para ese administrador.                                      |
-| `DATABASE_URL`   | Solo desarrollo local. Compose establece `file:/app/data/prod.db` dentro del contenedor.             |
-| `UPLOAD_DIR`     | Solo desarrollo local. Compose establece `/app/uploads`.                                             |
+| Variable         | Para qué sirve                                                                                           |
+| ---------------- | -------------------------------------------------------------------------------------------------------- |
+| `APP_URL`        | Origen exacto donde abrirás la web, sin ruta. En producción, `https://ecomarket.mcserverzcra.co.uk`.     |
+| `COOKIE_SECURE`  | `false` para HTTP local; **`true` al publicar con HTTPS**.                                               |
+| `HOST_PORT`      | Puerto local del servidor: `3200`. MarketLite puede seguir en `3000`.                                    |
+| `SEED_DEMO`      | `false` por defecto. `true` carga la demo si aún no existen sus cuentas, conservando los demás usuarios. |
+| `ADMIN_EMAIL`    | Correo `@pucp.edu.pe` para crear una cuenta administradora inicial, opcional.                            |
+| `ADMIN_PASSWORD` | Contraseña propia de 12 a 72 caracteres para ese administrador.                                          |
+| `DATABASE_URL`   | Solo desarrollo local. Compose establece `file:/app/data/prod.db` dentro del contenedor.                 |
+| `UPLOAD_DIR`     | Solo desarrollo local. Compose establece `/app/uploads`.                                                 |
 
 `APP_URL` también se usa para rechazar solicitudes de escritura originadas desde otra web. Si cambias el puerto, ajusta `APP_URL`. No abras el puerto del contenedor a internet: Compose lo publica únicamente en `127.0.0.1`.
 
 ## Datos de demostración
 
-En una base vacía:
+Puedes cargar la demo incluso si ya creaste el administrador u otros usuarios:
 
 ```bash
 docker compose exec ecomarket npm run db:seed
 ```
 
-O configura `SEED_DEMO=true` **antes del primer arranque**. El seed crea 6 estudiantes, 6 materiales, 4 pedidos y una propuesta pendiente para Mariana. Si ya hay usuarios, no modifica nada. No uses estas cuentas conocidas en una instalación pública.
+O configura `SEED_DEMO=true` y ejecuta `docker compose up -d`. El seed crea 6 estudiantes, 6 materiales, 4 pedidos y una propuesta pendiente para Mariana, sin modificar el administrador ni otros usuarios. Si las 6 cuentas demo ya existen, no duplica ejemplos ni restablece contraseñas o actividad. Si solo existen algunos de sus correos, se detiene sin modificar datos para evitar apropiarse de cuentas existentes. Las cuentas tienen contraseñas conocidas: utiliza la demo solo con datos ficticios, no con información privada.
 
 | Usuario demo                 | Contraseña       |
 | ---------------------------- | ---------------- |

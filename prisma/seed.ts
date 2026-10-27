@@ -2,20 +2,27 @@ import { PrismaClient } from "@prisma/client";
 import { hash } from "bcryptjs";
 const db = new PrismaClient();
 async function main() {
-  if ((await db.user.count()) > 0) {
-    console.log("La base de datos ya tiene usuarios. No se modifica ningún dato.");
-    return;
-  }
+  const people = [
+    ["Mariana Flores", "mariana.demo@pucp.edu.pe", "EE.GG. Letras"],
+    ["Diego Salazar", "diego.demo@pucp.edu.pe", "Arquitectura"],
+    ["Lucía Ríos", "lucia.demo@pucp.edu.pe", "EE.GG. Ciencias"],
+    ["Alejandro Vargas", "alejandro.demo@pucp.edu.pe", "Gestión"],
+    ["Valeria Castro", "valeria.demo@pucp.edu.pe", "Ciencias e Ingeniería"],
+    ["Marco Paredes", "marco.demo@pucp.edu.pe", "Arquitectura"],
+  ];
   const passwordHash = await hash(process.env.DEMO_PASSWORD || "EcoCampus2026!", 12);
-  await db.$transaction(async (tx) => {
-    const people = [
-      ["Mariana Flores", "mariana.demo@pucp.edu.pe", "EE.GG. Letras"],
-      ["Diego Salazar", "diego.demo@pucp.edu.pe", "Arquitectura"],
-      ["Lucía Ríos", "lucia.demo@pucp.edu.pe", "EE.GG. Ciencias"],
-      ["Alejandro Vargas", "alejandro.demo@pucp.edu.pe", "Gestión"],
-      ["Valeria Castro", "valeria.demo@pucp.edu.pe", "Ciencias e Ingeniería"],
-      ["Marco Paredes", "marco.demo@pucp.edu.pe", "Arquitectura"],
-    ];
+  const created = await db.$transaction(async (tx) => {
+    const existing = await tx.user.count({
+      where: { email: { in: people.map((person) => person[1]) } },
+    });
+    if (existing === people.length) {
+      console.log("Las cuentas demo ya existen. No se duplican ni se modifica ningún dato.");
+      return false;
+    }
+    if (existing > 0)
+      throw new Error(
+        "Ya existen algunos correos de la demo. No se modifica ningún dato; revisa esas cuentas antes de cargar los ejemplos.",
+      );
     const users = [];
     for (const [name, email, faculty] of people)
       users.push(
@@ -154,10 +161,12 @@ async function main() {
         },
       ],
     });
+    return true;
   });
-  console.log(
-    "Demo creada: 6 estudiantes, 6 materiales, 4 pedidos y una propuesta pendiente. Consulta las credenciales en README.md.",
-  );
+  if (created)
+    console.log(
+      "Demo creada: 6 estudiantes, 6 materiales, 4 pedidos y una propuesta pendiente. Los usuarios existentes no se modificaron. Consulta las credenciales en README.md.",
+    );
 }
 main()
   .catch((e) => {
